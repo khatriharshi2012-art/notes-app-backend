@@ -24,6 +24,9 @@ const allowedOrigins = [
   "http://127.0.0.1:5173",
   "http://127.0.0.1:5174",
 ];
+
+
+console.log("Allowed Origins:", allowedOrigins);
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
 
 const app = express();
