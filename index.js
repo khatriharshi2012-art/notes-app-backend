@@ -33,22 +33,22 @@ const app = express();
 mongoose
   .connect(process.env.MONGODB_URL)
   .then(() => {
-    "Mongodb connected succesfully";
+    console.log("MongoDB connected successfully");
   })
   .catch((err) => console.log(err));
 
 const corsOptions = {
-  origin(origin, callback) {
+  origin: function (origin, callback) {
     console.log("Incoming Origin:", origin);
 
+    // allow requests without origin (like Postman, mobile apps)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    console.log("Blocked by CORS:", origin);
-    return callback(null, false);
+    return callback(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
 };
@@ -57,10 +57,21 @@ app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
+app.get("/", (_req, res) => {
+  res.status(200).json({
+    status: true,
+    message: "Notes app backend is running",
+  });
+});
+
 app.use("/notes", noteRoute);
 app.use("/user", userRoute);
 app.use("/todo", todoRoute);
 
-app.listen(port, () => {
-  console.log(`Sever runninng on the port ${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
+
+module.exports = app;
