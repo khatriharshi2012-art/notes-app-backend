@@ -4,7 +4,6 @@ const express = require("express");
 const noteRoute = require("./routes/notes.routes");
 const userRoute = require("./routes/user.routes");
 const todoRoute = require("./routes/todo.routes");
-const connectToDatabase = require("./lib/db");
 
 const cors = require("cors");
 
@@ -12,7 +11,7 @@ const port = process.env.PORT;
 const isProduction = process.env.NODE_ENV === "production";
 const configuredOrigins = [
   process.env.FRONTEND_URL,
-  ...(process.env.FRONTEND_URL|| "")
+  ...(process.env.FRONTEND_URL || "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
@@ -29,6 +28,13 @@ console.log("Allowed Origins:", allowedOrigins);
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
 
 const app = express();
+
+mongoose
+  .connect(process.env.MONGODB_URL)
+  .then(() => {
+    console.log("MongoDB connected successfully");
+  })
+  .catch((err) => console.log(err));
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -61,17 +67,8 @@ app.use("/notes", noteRoute);
 app.use("/user", userRoute);
 app.use("/todo", todoRoute);
 
-if (require.main === module) {
-  connectToDatabase()
-    .then(() => {
-      app.listen(port, () => {
-        console.log(`Server running on port ${port}`);
-      });
-    })
-    .catch((error) => {
-      console.error("MongoDB connection failed:", error);
-      process.exit(1);
-    });
-}
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
 
 module.exports = app;
