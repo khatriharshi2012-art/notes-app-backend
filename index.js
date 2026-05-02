@@ -1,10 +1,10 @@
 require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
 
 const noteRoute = require("./routes/notes.routes");
 const userRoute = require("./routes/user.routes");
 const todoRoute = require("./routes/todo.routes");
+const connectToDatabase = require("./lib/db");
 
 const cors = require("cors");
 
@@ -29,13 +29,6 @@ console.log("Allowed Origins:", allowedOrigins);
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
 
 const app = express();
-
-mongoose
-  .connect(process.env.MONGODB_URL)
-  .then(() => {
-    console.log("MongoDB connected successfully");
-  })
-  .catch((err) => console.log(err));
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -69,9 +62,16 @@ app.use("/user", userRoute);
 app.use("/todo", todoRoute);
 
 if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
+  connectToDatabase()
+    .then(() => {
+      app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+      });
+    })
+    .catch((error) => {
+      console.error("MongoDB connection failed:", error);
+      process.exit(1);
+    });
 }
 
 module.exports = app;
